@@ -74,6 +74,8 @@ int foMPI_Init( int *argc, char ***argv ) {
   rma_args.put_relaxed_ordering = DMAPP_ROUTING_ADAPTIVE;
   rma_args.get_relaxed_ordering = DMAPP_ROUTING_ADAPTIVE;
   rma_args.max_outstanding_nb = DMAPP_DEF_OUTSTANDING_NB;
+  rma_args.queue_depth = DMAPP_QUEUE_DEFAULT_DEPTH;
+  rma_args.queue_nelems = DMAPP_QUEUE_DEFAULT_NELEMS;
   rma_args.offload_threshold = DMAPP_OFFLOAD_THRESHOLD;
   rma_args.max_concurrency = 1;
   rma_args.PI_ordering = DMAPP_PI_ORDERING_RELAXED;
