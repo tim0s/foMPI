@@ -1600,6 +1600,33 @@ int foMPI_Fetch_and_op(const void *origin_addr, void *result_addr, MPI_Datatype 
     win_ptr_seg = &(win->win_array[target_rank].win_ptr_seg);
   }
 
+  /* fast path: if this operation is on a quadword and the operation is directly supported by dmapp, operands need to be 8-byte aligned. */
+  if ((type_size == 8) && 
+      (((uint64_t)target_addr & 0x7)==0) && (((uint64_t)result_addr & 0x7)==0) && 
+      ((op == foMPI_SUM) || (op == foMPI_BAND) || (op == foMPI_BXOR) || (op == foMPI_BOR)) ) {
+  
+    if (op == foMPI_SUM) {
+        dmapp_afadd_qw_nbi(result_addr, target_addr, seg_ptr, target_pe, *((int64_t*)origin_addr));
+    }
+    else if (op == foMPI_BAND) {
+        dmapp_afand_qw_nbi(result_addr, target_addr, seg_ptr, target_pe, *((int64_t*)origin_addr));
+    }
+    else if (op == foMPI_BXOR) {
+        dmapp_afxor_qw_nbi(result_addr, target_addr, seg_ptr, target_pe, *((int64_t*)origin_addr));
+    }
+    else if (op == foMPI_BOR) {
+        dmapp_afor_qw_nbi(result_addr, target_addr, seg_ptr, target_pe, *((int64_t*)origin_addr));
+    }
+
+    win->nbi_counter++; /* little hack, since we actually just need a flag to indicate that there are nbi operations in progress */
+
+#ifdef PAPI
+  timing_record( 20 );
+#endif
+
+    return res;
+  } 
+
   /* set the mutex */
   foMPI_Set_window_mutex( &status, target_pe, win_ptr, win_ptr_seg, win );
   
